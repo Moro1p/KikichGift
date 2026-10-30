@@ -7,9 +7,9 @@ const CONFIG = {
     SLOWDOWN_MS: 1200,
   },
   DECODER: {
-    INTERVAL_MS: 100,        // ← было 80 — теперь заметно медленнее
-    MIN_REPLACEMENTS: 2,     // ← было 2
-    MAX_REPLACEMENTS: 4,     // ← было 4
+    INTERVAL_MS: 100,
+    MIN_REPLACEMENTS: 1,
+    MAX_REPLACEMENTS: 2,
   },
   HEART: {
     CANVAS_WIDTH: 1200,
@@ -88,6 +88,7 @@ const elements = {
   flash:     document.getElementById('flash'),
   carousel:  document.getElementById('carouselContainer'),
   bgGlow:    document.getElementById('bgGlow'),
+  splash:    document.getElementById('splash'),
 };
 
 function applyCanvasSizes() {
@@ -142,11 +143,15 @@ sounds.crack.volume = 0.7;
 sounds.flash.volume = 0.5;
 sounds.slide_sound.volume = 1;
 
-// ========== АУДИО-РАЗБЛОКИРОВКА (мобильные + iOS) ==========
+// ========== АУДИО-РАЗБЛОКИРОВКА ==========
 let audioUnlocked = false;
 let audioPrimed = false;
 let audioPlayPromise = null;
 
+/**
+ * «Будит» один аудиоэлемент (iOS Safari требует запустить каждый
+ * <audio> хотя бы раз из user-gesture).
+ */
 function primeOne(audio) {
   try {
     const wasMuted = audio.muted;
@@ -488,7 +493,7 @@ function drawHeartScene(whiteness, chainsFall, beat, swing) {
 
   c.clearRect(0, 0, W, Hh);
 
-  // === Пульсирующее свечение на весь экран (вместо клиппированного на канвасе) ===
+  // Фоновое свечение — на весь экран через CSS-переменную
   const glowPulse = 0.5 + 0.5 * Math.sin(heartState.beatPhase * Math.PI * 2);
   const glowIntensity = glowPulse * (1 - whiteness * 0.7);
   const gG = Math.round(255 * whiteness);
@@ -592,7 +597,6 @@ async function startFinale() {
 
   slowColumnsToStop();
 
-  // Гасим фоновое свечение (loop сердца остановится, значение застынет)
   elements.bgGlow.style.opacity = '0';
 
   sounds.backgroundStart.pause();
@@ -770,6 +774,41 @@ function loadCarouselContent() {
     });
   });
 }
+
+// ========== СТАРТОВАЯ ЗАГЛУШКА ==========
+(function setupSplash() {
+  const splash = elements.splash;
+  if (!splash) return;
+
+  let dismissed = false;
+
+  function dismissSplash() {
+    if (dismissed) return;
+    dismissed = true;
+
+    // Вызывается синхронно из user-gesture — браузер разрешает play()
+    unlockAudio();
+
+    splash.classList.add('hidden');
+
+    // На случай, если unlockAudio попал в «уже разблокировано»,
+    // но музыка по какой-то причине не заиграла — пробуем ещё раз.
+    if (!heartState.isFinale && !heartState.isTransforming) {
+      const p = sounds.backgroundStart.play();
+      if (p && p.catch) p.catch(() => {});
+    }
+  }
+
+  splash.addEventListener('pointerdown', dismissSplash, { passive: true });
+  splash.addEventListener('touchstart',  dismissSplash, { passive: true });
+  splash.addEventListener('click',       dismissSplash);
+  splash.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      dismissSplash();
+    }
+  });
+})();
 
 // ========== PAUSE ON HIDDEN ==========
 document.addEventListener('visibilitychange', () => {

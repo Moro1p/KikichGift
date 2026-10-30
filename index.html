@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gift</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Preload heart images (adjust paths if needed) -->
+    <link rel="preload" as="image" href="./assets/heart/red_heart.png">
+    <link rel="preload" as="image" href="./assets/heart/white_heart.png">
+    <link rel="preload" as="image" href="./assets/heart/red_chains.png">
+    <link rel="preload" as="image" href="./assets/heart/white_chains.png">
+</head>
+<body>
+    <div id="bgGlow" class="bg-glow" aria-hidden="true"></div>
+
+    <canvas id="backleftColumn" class="column back-left"></canvas>
+    <canvas id="backrightColumn" class="column back-right"></canvas>
+
+    <canvas id="leftColumn" class="column left"></canvas>
+    <canvas id="rightColumn" class="column right"></canvas>
+
+    <canvas id="heartCanvas" class="heart"
+            role="button" tabindex="0"
+            aria-label="Нажмите, чтобы открыть подарок"></canvas>
+
+    <div id="flash" class="flash"></div>
+
+    <div id="carouselContainer" class="carousel hidden">
+        <div class="slides"></div>
+        <button class="prev" aria-label="Предыдущее фото">❮</button>
+        <button class="next" aria-label="Следующее фото">❯</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
